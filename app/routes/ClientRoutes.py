@@ -40,3 +40,17 @@ def get_client_by_id(client_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail=f"Cliente com ID {client_id} não encontrado")
 
     return client
+
+@router.put("/{client_id}", response_model=Client)
+def update_client(client_id: int, client: Client, session: Session = Depends(get_session)):
+    db_client = session.get(Client, client_id)
+    if not db_client:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+
+    for key, value in client.model_dump(exclude_unset=True).items():
+        setattr(db_client, key, value)
+
+    session.commit() 
+    session.refresh(db_client)
+
+    return db_client
