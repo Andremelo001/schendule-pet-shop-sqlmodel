@@ -17,6 +17,6 @@ class PetBase(SQLModel):
 class Pet(PetBase, table=True):
     client_id: int = Field(foreign_key="client.id")
     client: 'Client' = Relationship(back_populates="pets")
-    schedules: list['Schedule'] = Relationship(back_populates="pets")
+    schedules: list['Schedule'] = Relationship(back_populates="pet")
 
 

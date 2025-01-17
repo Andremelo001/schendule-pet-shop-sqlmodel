@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 from sqlalchemy.orm import joinedload
-from app.models.Client import Client
+from app.models.Client import Client, ClientBaseWithPets
 from app.database import get_session
 from sqlalchemy import func
 
@@ -23,12 +23,11 @@ def creat_client(client: Client, session: Session = Depends(get_session)):
     return client
 
 
-@router.get("/", response_model=list[Client])
-def read_client(offset: int = 0, limit: int = Query(default=10, le=100), 
-               session: Session = Depends(get_session)):
-    """Endpoitn que retorna todos os clientes cadastrados"""
+@router.get("/", response_model=list[ClientBaseWithPets])
+def read_clients(offset: int = 0, limit: int = Query(default=10, le=100), 
+                 session: Session = Depends(get_session)):
     statement = (select(Client).offset(offset).limit(limit)
-                 .options(joinedload(Client.pets), joinedload(Client.schedules)))
+                 .options(joinedload(Client.pets))) 
     return session.exec(statement).unique().all()
 
 
