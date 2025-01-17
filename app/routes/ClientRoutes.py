@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 from sqlalchemy.orm import joinedload
-from app.models.client import Client
+from app.models.Client import Client
 from app.database import get_session
 
 router = APIRouter(

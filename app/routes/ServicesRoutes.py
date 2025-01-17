@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models.services import Services
+from app.models.Services import Services
 
 router = APIRouter(
     prefix="/services", 

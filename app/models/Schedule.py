@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship
-from app.models.client import ClientBase, Client
-from app.models.pet import PetBase, Pet
-from app.models.services import Services
+from app.models.Client import ClientBase, Client
+from app.models.Pet import PetBase, Pet
+from app.models.Services import Services
 
 
 class ScheduleServices(SQLModel, table=True):

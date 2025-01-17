@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 from sqlalchemy.orm import joinedload
 from app.database import get_session
-from app.models.services import Services
-from app.models.schedule import Schedule, ScheduleServices, ScheduleWithClientPetServices
+from app.models.Services import Services
+from app.models.Schedule import Schedule, ScheduleServices, ScheduleWithClientPetServices
 
 router = APIRouter(
     prefix="/schedules", 
