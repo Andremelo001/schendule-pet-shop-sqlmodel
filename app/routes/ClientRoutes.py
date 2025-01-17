@@ -54,3 +54,12 @@ def update_client(client_id: int, client: Client, session: Session = Depends(get
     session.refresh(db_client)
 
     return db_client
+
+@router.delete("/{client_id}")
+def delete_user(client_id: int, session: Session = Depends(get_session)):
+    client = session.get(Client, client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    session.delete(client)
+    session.commit()
+    return {"ok": True}
