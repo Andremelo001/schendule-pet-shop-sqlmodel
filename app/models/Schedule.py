@@ -23,7 +23,7 @@ class Schedule(ScheduleBase, table=True):
     client_id: int = Field(foreign_key="client.id")
     pet_id: int = Field(foreign_key="pet.id")
     client: 'Client' = Relationship(back_populates="schedules")
-    pets: 'Pet' = Relationship(back_populates="schedules")
+    pet: 'Pet' = Relationship(back_populates="schedules")
     services: list['Services'] = Relationship(link_model=ScheduleServices)
 
 
