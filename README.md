@@ -2,7 +2,7 @@
 classDiagram
     direction LR
     class Client {
-        id: UUID 
+        id: int 
         name: str
         cpf: str
         age: int
@@ -10,25 +10,24 @@ classDiagram
     }
 
     class Pet {
-        id: UUID
+        id: int
         name: str
         breed: str
         age: int
         size_in_centimeters: int
-        id_client: UUID
+        id_client: int
     }
 
     class Schedule {
-        id: UUID
+        id: int
         date_schedule: date
-        id_client: UUID
-        id_service: UUID
-        id_pet: UUID
+        id_client: int
+        id_pet: int
     }
 
     class Services {
-        id: UUID
-        duration: int
+        id: int
+        duration_in_minutes: int
         type_service: str
         price: float
     }
