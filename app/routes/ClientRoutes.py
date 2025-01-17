@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import joinedload
 from app.models.Client import Client
 from app.database import get_session
+from sqlalchemy import func
 
 router = APIRouter(
     prefix="/clients",  
@@ -12,6 +13,10 @@ router = APIRouter(
 @router.post("/", response_model=Client)
 def creat_client(client: Client, session: Session = Depends(get_session)):
     """Endpoint para criar um novo Cliente"""
+    if client.id == 0:
+        max_id = session.query(func.max(Client.id)).scalar()
+        client.id = max_id + 1 if max_id is not None else 1
+
     session.add(client)
     session.commit()
     session.refresh(client)
@@ -25,3 +30,13 @@ def read_client(offset: int = 0, limit: int = Query(default=10, le=100),
     statement = (select(Client).offset(offset).limit(limit)
                  .options(joinedload(Client.pets), joinedload(Client.schedules)))
     return session.exec(statement).unique().all()
+
+
+@router.get("/{client_id}", response_model=Client) 
+def get_client_by_id(client_id: int, session: Session = Depends(get_session)):
+    client = session.exec(select(Client).where(Client.id == client_id)).first()
+
+    if not client:
+        raise HTTPException(status_code=404, detail=f"Cliente com ID {client_id} não encontrado")
+
+    return client
