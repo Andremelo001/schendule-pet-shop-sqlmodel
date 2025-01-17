@@ -44,8 +44,56 @@ def create_schedule(schedule: Schedule, service_ids: list[int], session: Session
 @router.get("/", response_model=list[ScheduleWithClientPetServices])
 def read_schedules(offset: int = 0, limit: int = Query(default=10, le=100), 
                session: Session = Depends(get_session)):
-    """Endpoint que retorna os agendamentos com as informaçãoes do cliente e do pet associado"""
     statement = (select(Schedule).offset(offset).limit(limit)
-                 .options(joinedload(Schedule.client), joinedload(Schedule.pets), 
+                 .options(joinedload(Schedule.client), joinedload(Schedule.pet), 
                           joinedload(Schedule.services)))
     return session.exec(statement).unique().all()
+
+@router.get("/{schedule_id}", response_model=ScheduleWithClientPetServices)  # Usando o modelo correto
+def get_schedule_by_id(schedule_id: int, session: Session = Depends(get_session)):
+    statement = (
+        select(Schedule)
+        .where(Schedule.id == schedule_id)
+        .options(
+            joinedload(Schedule.client),
+            joinedload(Schedule.pet),
+            joinedload(Schedule.services),
+        )
+    )
+
+    schedule = session.exec(statement).first()
+
+    if not schedule:
+        raise HTTPException(status_code=404, detail=f"Agendamento com ID {schedule_id} não encontrado")
+
+    return schedule
+
+@router.delete("/{schedule_id}")
+def delete_schedule(schedule_id: int, session: Session = Depends(get_session)):
+    schedule = session.get(Schedule, schedule_id)
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    session.delete(schedule)
+    session.commit()
+    return {"ok": True}
+
+
+@router.put("/{schedule_id}", response_model=Schedule)
+def update_schedule(schedule_id: int, schedule: Schedule, session: Session = Depends(get_session)):
+    db_schedule = session.get(Schedule, schedule_id)
+
+    if not db_schedule:
+        raise HTTPException(status_code=404, detail="Agendamento não encontrado")
+
+    update_data = schedule.model_dump(exclude_unset=True)
+
+    if "date_schedule" in update_data and isinstance(update_data["date_schedule"], str):
+        update_data["date_schedule"] = datetime.fromisoformat(update_data["date_schedule"].replace("Z", "+00:00"))
+
+    for key, value in update_data.items():
+        setattr(db_schedule, key, value)
+
+    session.commit()
+    session.refresh(db_schedule)
+
+    return db_schedule

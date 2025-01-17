@@ -31,9 +31,15 @@ def read_clients(offset: int = 0, limit: int = Query(default=10, le=100),
     return session.exec(statement).unique().all()
 
 
-@router.get("/{client_id}", response_model=Client) 
+@router.get("/{client_id}", response_model=ClientBaseWithPets)
 def get_client_by_id(client_id: int, session: Session = Depends(get_session)):
-    client = session.exec(select(Client).where(Client.id == client_id)).first()
+    statement = (
+        select(Client)
+        .where(Client.id == client_id)
+        .options(joinedload(Client.pets))
+    )
+
+    client = session.exec(statement).first()
 
     if not client:
         raise HTTPException(status_code=404, detail=f"Cliente com ID {client_id} não encontrado")

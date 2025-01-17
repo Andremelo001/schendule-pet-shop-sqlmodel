@@ -25,6 +25,6 @@ class Schedule(ScheduleBase, table=True):
 
 class ScheduleWithClientPetServices(ScheduleBase):
     client: 'ClientBase'
-    pets: 'PetBase'
+    pet: 'PetBase'
     services: list['Services']
 
