@@ -37,8 +37,8 @@ def create_schedule(schedule: Schedule, service_ids: list[int], session: Session
 
     session.commit()
 
-    schedule = session.query(Schedule).filter(Schedule.id == schedule.id).first()
-
+    # Recarrega o schedule com os serviços associados
+    schedule = session.exec(Schedule).filter(Schedule.id == schedule.id).first()
     return schedule
 
 @router.get("/", response_model=list[ScheduleWithClientPetServices])

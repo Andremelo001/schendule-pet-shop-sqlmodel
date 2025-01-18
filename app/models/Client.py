@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from app.models.Pet import PetBase
 
 if TYPE_CHECKING:
-    from .pet import Pet
-    from .schedule import Schedule
+    from .Pet import Pet
+    from .Schedule import Schedule
 
 
 class ClientBase(SQLModel):
