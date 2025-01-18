@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import TYPE_CHECKING
+from app.models.Pet import PetBase
 
 if TYPE_CHECKING:
     from .pet import Pet
@@ -17,3 +18,6 @@ class ClientBase(SQLModel):
 class Client(ClientBase, table=True):
     pets: list['Pet'] = Relationship(back_populates="client")
     schedules: list['Schedule'] = Relationship(back_populates="client")
+
+class ClientBaseWithPets(ClientBase):
+    pets: list[PetBase] = []

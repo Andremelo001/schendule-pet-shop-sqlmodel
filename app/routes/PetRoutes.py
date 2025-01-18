@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models.pet import Pet
+from app.models.Pet import Pet
 
 
 
