@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.database import create_db_and_tables
 from app.routes import ClientRoutes, PetRoutes, ScheduleRoutes, ServicesRoutes
+from app.endpoints import GetPetsByIdClient
 
 # Configurações de inicialização
 @asynccontextmanager
@@ -17,3 +18,4 @@ app.include_router(ClientRoutes.router)
 app.include_router(PetRoutes.router)
 app.include_router(ScheduleRoutes.router)
 app.include_router(ServicesRoutes.router)
+app.include_router(GetPetsByIdClient.router)
