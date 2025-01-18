@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import joinedload
 from app.database import get_session
 from app.models.Services import Services
+from app.models.Pet import Pet
 from app.models.Schedule import Schedule, ScheduleServices, ScheduleWithClientPetServices
 from sqlalchemy import func
 from datetime import datetime
@@ -18,12 +19,18 @@ def get_total_schedules(session: Session = Depends(get_session)):
     total_schedules = session.exec(select(func.count(Schedule.id))).one()
     return total_schedules
     
-
 @router.post("/", response_model=Schedule)
 def create_schedule(schedule: Schedule, service_ids: list[int], session: Session = Depends(get_session)):
-    
+
     if isinstance(schedule.date_schedule, str):
         schedule.date_schedule = datetime.fromisoformat(schedule.date_schedule.replace("Z", "+00:00"))
+    
+    pet = session.get(Pet, schedule.pet_id)
+    if not pet:
+        raise HTTPException(status_code=404, detail="Pet não encontrado")
+    
+    if pet.client_id != schedule.client_id:
+        raise HTTPException(status_code=400, detail="Este pet não pertence ao cliente informado")
     
     if schedule.id == 0:
         max_id = session.query(func.max(Schedule.id)).scalar()
@@ -44,7 +51,6 @@ def create_schedule(schedule: Schedule, service_ids: list[int], session: Session
     session.commit()
 
     schedule = session.query(Schedule).filter(Schedule.id == schedule.id).first()
-
     return schedule
 
 @router.get("/", response_model=list[ScheduleWithClientPetServices])
