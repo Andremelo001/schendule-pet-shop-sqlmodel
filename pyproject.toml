@@ -8,4 +8,7 @@ dependencies = [
     "fastapi[standard]>=0.115.6",
     "ruff>=0.9.1",
     "sqlmodel>=0.0.22",
+    "standard>=1.0.3",
+    "uvicorn>=0.34.0",
+    "uvloop>=0.21.0",
 ]
