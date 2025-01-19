@@ -51,6 +51,7 @@ def create_schedule(schedule: Schedule, service_ids: list[int], session: Session
     session.commit()
 
     schedule = session.query(Schedule).filter(Schedule.id == schedule.id).first()
+
     return schedule
 
 @router.get("/", response_model=list[ScheduleWithClientPetServices])
