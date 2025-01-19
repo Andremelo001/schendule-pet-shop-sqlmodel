@@ -19,6 +19,12 @@ def creat_client(client: Client, session: Session = Depends(get_session)):
         max_id = session.query(func.max(Client.id)).scalar()
         client.id = max_id + 1 if max_id is not None else 1
 
+    existing_client = session.exec(select(Client).where(Client.cpf == client.cpf)).first()
+    if existing_client:
+        raise HTTPException(
+            status_code=400, detail=f"O CPF '{client.cpf}' já está cadastrado."
+        )
+
     session.add(client)
     session.commit()
     session.refresh(client)
@@ -28,6 +34,7 @@ def creat_client(client: Client, session: Session = Depends(get_session)):
 @router.get("/", response_model=list[ClientBaseWithPets])
 def read_clients(offset: int = 0, limit: int = Query(default=10, le=100), 
                  session: Session = Depends(get_session)):
+    """Endpoint que retorna todos os clientes e seus pets"""
     statement = (select(Client).offset(offset).limit(limit)
                  .options(joinedload(Client.pets))) 
     return session.exec(statement).unique().all()
@@ -35,6 +42,7 @@ def read_clients(offset: int = 0, limit: int = Query(default=10, le=100),
 
 @router.get("/{client_id}", response_model=ClientBaseWithPets)
 def get_client_by_id(client_id: int, session: Session = Depends(get_session)):
+    """Endpoint que retorna um cliente e seus pets a partir de um `client_id`"""
     statement = (
         select(Client)
         .where(Client.id == client_id)
@@ -50,6 +58,7 @@ def get_client_by_id(client_id: int, session: Session = Depends(get_session)):
 
 @router.put("/{client_id}", response_model=Client)
 def update_client(client_id: int, client: Client, session: Session = Depends(get_session)):
+    """Endpoint que atualiza os dados de um cliente a partir de um `client_id`"""
     db_client = session.get(Client, client_id)
     if not db_client:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
@@ -64,6 +73,7 @@ def update_client(client_id: int, client: Client, session: Session = Depends(get
 
 @router.delete("/{client_id}")
 def delete_client(client_id: int, session: Session = Depends(get_session)):
+    """Endpoint que deleta um cliente, seus pets e os agendamentos que estão associados a ele a partir de um `client_id`"""
     client = session.get(Client, client_id)
     if not client:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
@@ -83,6 +93,7 @@ def delete_client(client_id: int, session: Session = Depends(get_session)):
 
 @router.get("/get_schedule/{client_id}", response_model=list[ScheduleBase])
 def get_client_schedules(client_id: int, session: Session = Depends(get_session)):
+    """Endpoint que realiza a busca dos agendamentos que estão associados ao cliente por um `client_id`"""
     # Buscar o cliente
     statement = select(Client).where(Client.id == client_id)
     client = session.exec(statement).first()
