@@ -4,6 +4,8 @@ from sqlalchemy.orm import joinedload
 from app.models.Client import Client, ClientBaseWithPets
 from app.database import get_session
 from sqlalchemy import func
+from app.models.Schedule import Schedule, ScheduleBase
+from app.models.Pet import Pet
 
 router = APIRouter(
     prefix="/clients",  
@@ -61,10 +63,37 @@ def update_client(client_id: int, client: Client, session: Session = Depends(get
     return db_client
 
 @router.delete("/{client_id}")
-def delete_user(client_id: int, session: Session = Depends(get_session)):
+def delete_client(client_id: int, session: Session = Depends(get_session)):
     client = session.get(Client, client_id)
     if not client:
-        raise HTTPException(status_code=404, detail="Client not found")
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+    
+    schedules_to_delete = session.query(Schedule).filter(Schedule.client_id == client_id).all()
+    for schedule in schedules_to_delete:
+        session.delete(schedule)
+    
+    pets_to_delete = session.query(Pet).filter(Pet.client_id == client_id).all()
+    for pet in pets_to_delete:
+        session.delete(pet)
+
     session.delete(client)
     session.commit()
+
     return {"ok": True}
+
+@router.get("/get_schedule/{client_id}", response_model=list[ScheduleBase])
+def get_client_schedules(client_id: int, session: Session = Depends(get_session)):
+    # Buscar o cliente
+    statement = select(Client).where(Client.id == client_id)
+    client = session.exec(statement).first()
+
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+
+    # Buscar os agendamentos do cliente
+    schedules = session.exec(select(Schedule).where(Schedule.client_id == client_id)).all()
+
+    if not schedules:
+        raise HTTPException(status_code=404, detail="Nenhum agendamento encontrado para este cliente")
+
+    return schedules
