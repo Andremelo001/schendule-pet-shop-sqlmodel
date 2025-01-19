@@ -14,13 +14,10 @@ router = APIRouter(
     tags=["Schedules"],  
 )
 
-@router.get("/total", response_model=int)
-def get_total_schedules(session: Session = Depends(get_session)):
-    total_schedules = session.exec(select(func.count(Schedule.id))).one()
-    return total_schedules
     
 @router.post("/", response_model=Schedule)
 def create_schedule(schedule: Schedule, service_ids: list[int], session: Session = Depends(get_session)):
+    """Endpoint que realiza a criação de um novo agendamento, informando um cliente, um pet e os serviços que estarão nesse agendamento"""
 
     if isinstance(schedule.date_schedule, str):
         schedule.date_schedule = datetime.fromisoformat(schedule.date_schedule.replace("Z", "+00:00"))
@@ -31,6 +28,11 @@ def create_schedule(schedule: Schedule, service_ids: list[int], session: Session
     
     if pet.client_id != schedule.client_id:
         raise HTTPException(status_code=400, detail="Este pet não pertence ao cliente informado")
+    
+    schedule_existing = session.exec(select(Schedule).where(Schedule.date_schedule == schedule.date_schedule, Schedule.client_id == schedule.client_id)).first()
+
+    if schedule_existing:
+        raise HTTPException(status_code=400, detail=f"Já existe um agendamento com a data {schedule.date_schedule} cadastrado!")
     
     if schedule.id == 0:
         max_id = session.query(func.max(Schedule.id)).scalar()
@@ -57,13 +59,15 @@ def create_schedule(schedule: Schedule, service_ids: list[int], session: Session
 @router.get("/", response_model=list[ScheduleWithClientPetServices])
 def read_schedules(offset: int = 0, limit: int = Query(default=10, le=100), 
                session: Session = Depends(get_session)):
+    """Endpoint que retorna todos os agendamentos cadastrados com o cliente, o pet e os serviços que estão associados aos agendamentos"""
     statement = (select(Schedule).offset(offset).limit(limit)
                  .options(joinedload(Schedule.client), joinedload(Schedule.pet), 
                           joinedload(Schedule.services)))
     return session.exec(statement).unique().all()
 
-@router.get("/{schedule_id}", response_model=ScheduleWithClientPetServices)  # Usando o modelo correto
+@router.get("/{schedule_id}", response_model=ScheduleWithClientPetServices)
 def get_schedule_by_id(schedule_id: int, session: Session = Depends(get_session)):
+    """Endpoint que retorna um agendamento a partir do `schedule_id`"""
     statement = (
         select(Schedule)
         .where(Schedule.id == schedule_id)
@@ -83,9 +87,10 @@ def get_schedule_by_id(schedule_id: int, session: Session = Depends(get_session)
 
 @router.delete("/{schedule_id}")
 def delete_schedule(schedule_id: int, session: Session = Depends(get_session)):
+    """Endpoint que deleta um agandamento a partir de um `schedule_id`"""
     schedule = session.get(Schedule, schedule_id)
     if not schedule:
-        raise HTTPException(status_code=404, detail="Schedule not found")
+        raise HTTPException(status_code=404, detail="Agendamento não encontrado")
     session.delete(schedule)
     session.commit()
     return {"ok": True}
@@ -93,6 +98,7 @@ def delete_schedule(schedule_id: int, session: Session = Depends(get_session)):
 
 @router.put("/{schedule_id}", response_model=Schedule)
 def update_schedule(schedule_id: int, schedule: Schedule, session: Session = Depends(get_session)):
+    """Endpoint que atualiza os dados de um agendamento a partir de um `schedule_id`"""
     db_schedule = session.get(Schedule, schedule_id)
 
     if not db_schedule:
@@ -118,6 +124,7 @@ def get_schedules_by_month(
     month: int,
     session: Session = Depends(get_session)
 ):
+    """Endpoint que retorna os agendamentos que foram castrados em um determinado mês e ano a partir de um `year` e um `month`"""
     try:
         start_date = datetime(year, month, 1)
         if month == 12:
@@ -143,4 +150,10 @@ def get_schedules_by_month(
         raise HTTPException(status_code=404, detail=f"Nenhum agendamento encontrado para {month}/{year}")
 
     return schedules
+
+@router.get("/total-schedule/", response_model=int)
+def get_total_schedules(session: Session = Depends(get_session)):
+    """Endpoint que retorna o total de agendamentos cadastrados"""
+    total_schedules = session.exec(select(func.count(Schedule.id))).one()
+    return total_schedules
 
