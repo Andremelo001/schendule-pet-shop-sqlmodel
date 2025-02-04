@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from .Client import Client
     from .Schedule import Schedule
 
+
 class PetUpdate(SQLModel):
     name: str | None
     breed: str | None
@@ -22,7 +23,5 @@ class PetBase(SQLModel):
 
 class Pet(PetBase, table=True):
     client_id: int = Field(foreign_key="client.id")
-    client: 'Client' = Relationship(back_populates="pets")
-    schedules: list['Schedule'] = Relationship(back_populates="pet")
-
-
+    client: "Client" = Relationship(back_populates="pets")
+    schedules: list["Schedule"] = Relationship(back_populates="pet")

@@ -16,8 +16,9 @@ class ClientBase(SQLModel):
 
 
 class Client(ClientBase, table=True):
-    pets: list['Pet'] = Relationship(back_populates="client")
-    schedules: list['Schedule'] = Relationship(back_populates="client")
+    pets: list["Pet"] = Relationship(back_populates="client")
+    schedules: list["Schedule"] = Relationship(back_populates="client")
+
 
 class ClientBaseWithPets(ClientBase):
     pets: list[PetBase] = []
